@@ -14,42 +14,33 @@ class TenderController extends BaseController
      * Display a listing of the resource.
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tenders = [];
-        if (($open = fopen(database_path() . "/migrations/test_task_data.csv", "r")) !== FALSE) {
-            while (($data = fgetcsv($open)) !== FALSE) {
-                if(in_array('Внешний код',$data)) {
-                    continue;
-                }
-                echo "<pre>" . print_r(  [Tender::class,
-                        'xml_id' => trim($data[0]),
-                        'number' => trim($data[1]),
-                        'status' => trim($data[2]) == 'Открыто',
-                        'name' => trim($data[3]),
-                        'update' => Carbon::parse($data[4])->timestamp,
-                    ],true) . "</pre>";
-                $test = Tender::create([
-                    'xml_id' => $data[0],
-                    'number' => $data[1],
-                    'status' => trim($data[2]) == 'Открыто',
-                    'name' => $data[3],
-                    'update' => Carbon::parse($data[4])->timestamp
-                ]);
-
-                die();
-//                $tenders[] = [
-//                    'xml_id' => $data[0],
-//                    'number' => $data[1],
-//                    'status' => trim($data[2]) == 'Открыто',
-//                    'name' => $data[3],
-//                    'update' => Carbon::parse($data[4])->timestamp
-//                ];
-            }
-            fclose($open);
+        $tenders= Tender::query();
+        $tenders->select(['id', 'xml_id', 'number', 'status', 'name', 'update']);
+//        if ($request->has('status')) {
+//            $tenders->where('status', $request->status);
+//        }
+//        if ($request->has('xml_id')) {
+//            $tenders->where('xml_id', $request->status);
+//        }
+        if ($request->has('name')) {
+            $tenders->where('name', 'like', '%' . $request->name . '%');
         }
-        $tenders = Tender::all();
-        return $this->sendResponse($tenders->toArray(), 'Tenders retrieved successfully.');
+//        if ($request->has('number')) {
+//            $tenders->where('number', 'like', '%' . $request->number . '%');
+//        }
+        if ($request->has('date')) {
+            $tenders->whereDate('update', Carbon::parse($request->date)->format('Y-m-d') );
+        }
+        if ($request->has('date_to')) {
+            $tenders->whereDate('update', '<', Carbon::parse($request->date)->format('Y-m-d') );
+        }
+        if ($request->has('date_from')) {
+            $tenders->whereDate('update', '>',Carbon::parse($request->date)->format('Y-m-d') );
+        }
+
+        return $this->sendResponse($tenders->get(), 'Tenders retrieved successfully.');
     }
 
 
@@ -61,14 +52,23 @@ class TenderController extends BaseController
     public function store(Request $request)
     {
         $input = $request->all();
+        if ($request->has('update')) {
+            $input['update'] =  Carbon::parse($request->update)->format('Y-m-d H:i:s');
+        }
+        if ($request->has('status')) {
+            $input['status'] = in_array($request->status,[1,'true']);
+        }
         $validator = Validator::make($input, [
-            'xml_id' => 'required',
-            'name' => 'required',
-            'number' => 'required'
+            'xml_id' => 'required|integer|unique:tenders,xml_id',
+            'name' => 'required|string|min:10|max:250',
+            'number' => 'required|string|min:1|max:50',
+            'status' => 'boolean',
+            'update' => 'string',
         ]);
         if($validator->fails()){
             return $this->sendError('Validation Error.', $validator->errors());
         }
+
         $tender = Tender::create($input);
         return $this->sendResponse($tender->toArray(), 'Tender created successfully.');
     }
@@ -78,13 +78,14 @@ class TenderController extends BaseController
      * @param $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, string $id)
     {
-        $tender = Product::find($id);
+
+        $tender = Tender::find($id);
         if (is_null($tender)) {
             return $this->sendError('Tender not found.');
         }
-        return $this->sendResponse($tender->toArray(), 'Tender retrieved successfully.');
+        return $this->sendResponse($tender, 'Tender retrieved successfully.');
     }
 
     /**

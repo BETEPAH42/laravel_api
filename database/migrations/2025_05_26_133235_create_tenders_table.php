@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('tenders', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->integer('xml_id')->unique();
             $table->string('number', 50);
             $table->boolean('status')->default(false);
             $table->string('name', 250);
+            $table->timestamp('update')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
     }

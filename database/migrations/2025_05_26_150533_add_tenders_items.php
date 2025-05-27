@@ -19,24 +19,16 @@ return new class extends Migration
                 if(in_array('Внешний код',$data)) {
                     continue;
                 }
-                \App\Models\Tender::created([
+                \App\Models\Tender::create([
                     'xml_id' => $data[0],
                     'number' => $data[1],
                     'status' => trim($data[2]) == 'Открыто',
                     'name' => $data[3],
-                    'update' => Carbon::parse($data[4])->timestamp
+                    'update' => Carbon::parse($data[4])->format('Y-m-d H:i:s')
                 ]);
-//                $tenders[] = [
-//                    'xml_id' => $data[0],
-//                    'number' => $data[1],
-//                    'status' => trim($data[2]) == 'Открыто',
-//                    'name' => $data[3],
-//                    'update' => Carbon::parse($data[4])->timestamp
-//                ];
             }
             fclose($open);
         }
-//        \App\Models\Tender::creat($tenders);
     }
 
     /**
