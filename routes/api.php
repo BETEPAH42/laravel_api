@@ -11,3 +11,5 @@ Route::get('/user', function (Request $request) {
 Route::get('/tenders', [TenderController::class, 'index']);
 Route::post('/tenders', [TenderController::class, 'store']);
 Route::get('/tenders/{id}', [TenderController::class, 'show']);
+
+//Route::apiResource('tenders', TenderController::class);

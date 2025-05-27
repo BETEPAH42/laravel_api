@@ -11,8 +11,9 @@ use Carbon\Carbon;
 class TenderController extends BaseController
 {
     /**
-     * Display a listing of the resource.
-     * @return \Illuminate\Http\Response
+     * Вывод списка с фильтром по наименованию и дате + дата до и после (можно включить и остальные параметры).
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -45,7 +46,7 @@ class TenderController extends BaseController
 
 
     /**
-     * Store a newly created resource in storage.
+     * Создание сущности
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
@@ -74,11 +75,11 @@ class TenderController extends BaseController
     }
 
     /**
-     * Display the specified resource.
-     * @param $id
-     * @return \Illuminate\Http\Response
+     * Получение конкретной записи по id
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Request $request, string $id)
+    public function show(string $id)
     {
 
         $tender = Tender::find($id);
@@ -86,41 +87,5 @@ class TenderController extends BaseController
             return $this->sendError('Tender not found.');
         }
         return $this->sendResponse($tender, 'Tender retrieved successfully.');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Tender $tender)
-    {
-        $input = $request->all();
-        $validator = Validator::make($input, [
-            'xml_id' => 'required',
-            'name' => 'required',
-            'number' => 'required',
-            'status' => 'boolean'
-        ]);
-        if($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
-        }
-        if(isset($input['status'])) {
-            $tender->status = $input['status'];
-        }
-        $tender->name = $input['name'];
-        $tender->status = $input['number'];
-        $tender->status = $input['name'];
-        $tender->save();
-        return $this->sendResponse($tender->toArray(), 'Tender updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @param Tender $tender
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Tender $tender)
-    {
-        $tender->delete();
-        return $this->sendResponse($tender->toArray(), 'Tender deleted successfully.');
     }
 }
